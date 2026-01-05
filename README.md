@@ -4,18 +4,42 @@ Dokumen ini berisi **panduan lengkap penggunaan API INAPROC API Gateway**, disus
 
 ---
 
-## 0. Gambaran Umum (Untuk Orang Awam)
+## 0. Gambaran Umum (Untuk Orang Non-Teknis)
 
-INAPROC API Gateway adalah **jalur resmi untuk mengambil data pengadaan pemerintah** (RUP, Tender, E‑Purchasing, Penyedia, dll).
+Bagian ini menjelaskan **apa yang sebenarnya terjadi** saat Anda menggunakan INAPROC API Gateway, **tanpa istilah teknis**.
 
-Cara berpikir sederhananya:
+Bayangkan situasinya seperti ini:
 
-* **INAPROC** = gudang data pengadaan
-* **API Gateway** = pintu masuk gudang
-* **API Token** = kunci pintu
-* **Aplikasi Anda** = pihak yang mengambil data
+* **INAPROC** adalah *pusat data nasional pengadaan* (seperti arsip besar pemerintah).
+* **API Gateway** adalah *loket resmi* untuk meminta data.
+* **API Token** adalah *kartu identitas/izin masuk*.
+* **Aplikasi Anda** (atau sistem instansi) adalah *pihak yang meminta data*.
 
-Tanpa **token**, aplikasi **tidak bisa mengambil data**.
+Jika digambarkan secara sederhana:
+
+> Orang / aplikasi → menunjukkan kartu izin (API Token) → ke loket INAPROC → meminta data → data diberikan
+
+📌 **Istilah penting yang sering muncul:**
+
+### Apa arti "Konsumsi API Gateway"?
+
+**Konsumsi API Gateway** berarti:
+
+> *Menggunakan izin (API Token) untuk meminta dan mengambil data dari INAPROC melalui jalur resmi (API Gateway).*
+
+Dengan kata lain:
+
+* BUKAN membuat data
+* BUKAN mengubah data
+* BUKAN mengatur sistem INAPROC
+
+✔ **HANYA membaca / mengambil data**
+
+Contoh bahasa sehari-hari:
+
+> "Kami mengambil data pengadaan dari INAPROC menggunakan akses resmi."
+
+Itulah yang dimaksud **konsumsi API**.
 
 ---
 
@@ -54,31 +78,43 @@ Artinya:
 
 ---
 
-## 2. Autentikasi (WAJIB)
+## 2. Autentikasi (WAJIB – Penjelasan Non-Teknis)
 
-Setiap request **harus menyertakan API Token**.
+Setiap kali aplikasi meminta data ke INAPROC, sistem INAPROC akan bertanya:
 
-### 2.1 Header Wajib
+> "Siapa Anda dan apakah Anda punya izin?"
 
-```
-Authorization: Bearer API_TOKEN_ANDA
-Accept: application/json
-```
+Jawabannya diberikan melalui **API Token**.
+
+### Cara kerja sederhananya:
+
+1. Anda **login ke Portal Developer INAPROC**
+2. Anda **membuat API Token**
+3. Token tersebut menjadi **identitas digital** aplikasi Anda
+
+Saat aplikasi meminta data, token ini **ditunjukkan ke INAPROC**.
 
 Jika token:
 
-* salah
-* sudah kedaluwarsa
-* tidak punya izin API
+* valid
+* belum kedaluwarsa
+* memiliki izin ke API yang diminta
 
-Maka API akan mengembalikan error **401 atau 403**.
+➡️ **data akan diberikan**
 
-⚠️ Token **tidak boleh**:
+Jika tidak:
 
-* disimpan di GitHub
-* ditulis langsung di source code
+* permintaan akan **ditolak** (401 / 403)
 
-Gunakan `.env` atau secret manager.
+### Bentuk Praktisnya (tanpa istilah teknis)
+
+Setiap permintaan data **SELALU membawa token**.
+
+Kalau diibaratkan surat:
+
+> Token = nomor surat tugas resmi
+
+Tanpa nomor surat tugas, permintaan tidak diproses.
 
 ---
 
@@ -98,14 +134,37 @@ Contoh kategori:
 
 ---
 
-## 4. Parameter WAJIB (Sering Terjadi Error)
+## 4. Parameter WAJIB (Penjelasan untuk Non-Teknis)
 
-Hampir semua endpoint data **WAJIB** menyertakan dua parameter berikut:
+Saat meminta data, INAPROC **tidak bisa menebak**:
 
-| Parameter   | Fungsi                |
-| ----------- | --------------------- |
-| `kode_klpd` | Kode instansi K/L/PD  |
-| `tahun`     | Tahun anggaran (YYYY) |
+* data milik instansi mana
+* data tahun berapa
+
+Karena itu, Anda **WAJIB menyebutkan dua hal ini setiap kali meminta data**:
+
+| Yang Harus Disebutkan | Artinya                                       |
+| --------------------- | --------------------------------------------- |
+| `kode_klpd`           | Kode instansi (Kementerian / Lembaga / Pemda) |
+| `tahun`               | Tahun anggaran data yang diminta              |
+
+📌 Analogi sederhana:
+
+> Seperti meminta arsip: "Saya minta arsip **instansi A**, **tahun 2024**"
+
+Kalau hanya berkata:
+
+> "Saya minta arsip"
+
+➡️ petugas tidak bisa memproses permintaan.
+
+Itulah sebabnya:
+
+❌ Permintaan tanpa `kode_klpd` atau `tahun` **pasti ditolak**
+
+---------|------|
+| `kode_klpd` | Kode instansi K/L/PD |
+| `tahun` | Tahun anggaran (YYYY) |
 
 ❌ Jika salah satu tidak ada → API akan menolak request (**HTTP 400**).
 
